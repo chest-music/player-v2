@@ -1,0 +1,269 @@
+/* Player Bar - Fixed bottom position with modern Apple Music styling */
+.playerBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  backdrop-filter: blur(20px);
+  background: rgba(0, 0, 0, 0.8);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px 20px;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.playerContent {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  gap: 20px;
+}
+
+/* Track Info Section */
+.trackInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 200px;
+  flex-shrink: 0;
+}
+
+.albumCover {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.trackText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.trackTitle {
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+
+.trackArtist {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+/* Controls Section */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.controlButton {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  width: 40px;
+  height: 40px;
+}
+
+.controlButton:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
+}
+
+.controlButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.playPauseButton {
+  background: rgba(255, 255, 255, 0.9);
+  color: black;
+  width: 48px;
+  height: 48px;
+  font-size: 18px;
+}
+
+.playPauseButton:hover:not(:disabled) {
+  background: white;
+  transform: scale(1.05);
+}
+
+/* Progress Bar Section */
+.progressContainer {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 12px;
+  max-width: 400px;
+}
+
+.timeText {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 11px;
+  font-weight: 400;
+  min-width: 35px;
+  text-align: center;
+}
+
+.progressBar {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  cursor: pointer;
+  position: relative;
+  transition: height 0.2s ease;
+}
+
+.progressBar:hover {
+  height: 6px;
+}
+
+.progressFill {
+  height: 100%;
+  background: white;
+  border-radius: 2px;
+  transition: width 0.1s ease;
+  position: relative;
+}
+
+.progressFill::after {
+  content: '';
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.progressBar:hover .progressFill::after {
+  opacity: 1;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .playerBar {
+    padding: 10px 16px;
+    min-height: 70px;
+  }
+  
+  .playerContent {
+    gap: 12px;
+  }
+  
+  .trackInfo {
+    min-width: 140px;
+  }
+  
+  .albumCover {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .trackTitle {
+    font-size: 13px;
+  }
+  
+  .trackArtist {
+    font-size: 11px;
+  }
+  
+  .controls {
+    gap: 12px;
+  }
+  
+  .controlButton {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+  
+  .playPauseButton {
+    width: 42px;
+    height: 42px;
+    font-size: 16px;
+  }
+  
+  .progressContainer {
+    max-width: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .playerBar {
+    padding: 8px 12px;
+    min-height: 65px;
+  }
+  
+  .trackInfo {
+    min-width: 120px;
+  }
+  
+  .albumCover {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+  }
+  
+  .trackTitle {
+    font-size: 12px;
+  }
+  
+  .trackArtist {
+    font-size: 10px;
+  }
+  
+  .controls {
+    gap: 8px;
+  }
+  
+  .controlButton {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+    padding: 6px;
+  }
+  
+  .playPauseButton {
+    width: 38px;
+    height: 38px;
+    font-size: 14px;
+  }
+  
+  .timeText {
+    font-size: 10px;
+    min-width: 30px;
+  }
+}
