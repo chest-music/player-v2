@@ -10,4 +10,9 @@ export interface PlayerState {
   currentTime: number;
   duration: number;
   currentTrackIndex: number;
+  volume: number;
+  isMuted: boolean;
+  isLooping: boolean;
+  isShuffled: boolean;
+  showVolumeSlider: boolean;
 }

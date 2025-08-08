@@ -32,6 +32,7 @@ button {
 /* Ensure player bar doesn't interfere with page content */
 body {
   padding-bottom: 80px;
+  overflow-x: hidden;
 }
 
 @media (max-width: 768px) {
@@ -42,6 +43,6 @@ body {
 
 @media (max-width: 480px) {
   body {
-    padding-bottom: 65px;
+    padding-bottom: 60px;
   }
 }
