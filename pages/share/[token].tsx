@@ -1,17 +1,31 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
 import PlayerBar from '@/components/PlayerBar';
-import { Track } from '@/types';
+import { PlayLimitBanner } from '@/components/PlayLimitBanner';
+import { PlayLimitModal } from '@/components/PlayLimitModal';
+import { usePlayLimits } from '@/hooks/usePlayLimits';
+import { apiClient } from '@/lib/api-client';
+import { chestTracksToTracks } from '@/utils/track-adapter';
+import { ChestTrack, TrackMeta } from '@/types';
 
 interface SharePageProps {
-  tracks?: Track[];
+  tracks?: ChestTrack[];
   error?: string;
   token: string;
+  meta?: TrackMeta;
 }
 
-const SharePage: React.FC<SharePageProps> = ({ tracks, error, token }) => {
+const SharePage: React.FC<SharePageProps> = ({ tracks, error, token, meta }) => {
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const currentTrack = tracks?.[0] || null;
+  const isSharedLink = !!token;
+  
+  const playLimits = usePlayLimits({
+    track: currentTrack,
+    isSharedLink
+  });
   // Error state - elegant and simple
   if (error) {
     return (
@@ -115,21 +129,21 @@ const SharePage: React.FC<SharePageProps> = ({ tracks, error, token }) => {
     );
   }
 
-  const currentTrack = tracks[0]; // For meta tags
+  const trackMeta = meta || (currentTrack ? apiClient.generateTrackMeta(currentTrack) : null);
 
   return (
     <>
       <Head>
-        <title>{currentTrack.title} - {currentTrack.artist}</title>
-        <meta name="description" content={`Listen to ${currentTrack.title} by ${currentTrack.artist}`} />
-        <meta property="og:title" content={`${currentTrack.title} - ${currentTrack.artist}`} />
-        <meta property="og:description" content={`Listen to ${currentTrack.title} by ${currentTrack.artist}`} />
-        <meta property="og:image" content={currentTrack.cover} />
+        <title>{trackMeta?.title || 'Chest Music'}</title>
+        <meta name="description" content={trackMeta?.description || 'Listen to music on Chest Music'} />
+        <meta property="og:title" content={trackMeta?.ogTitle || trackMeta?.title || 'Chest Music'} />
+        <meta property="og:description" content={trackMeta?.ogDescription || trackMeta?.description || 'Listen to music on Chest Music'} />
+        <meta property="og:image" content={trackMeta?.ogImage || 'https://cdn.chestmusic.com/cover-default.jpg'} />
         <meta property="og:type" content="music.song" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${currentTrack.title} - ${currentTrack.artist}`} />
-        <meta name="twitter:description" content={`Listen to ${currentTrack.title} by ${currentTrack.artist}`} />
-        <meta name="twitter:image" content={currentTrack.cover} />
+        <meta name="twitter:card" content={trackMeta?.twitterCard || 'summary_large_image'} />
+        <meta name="twitter:title" content={trackMeta?.twitterTitle || trackMeta?.title || 'Chest Music'} />
+        <meta name="twitter:description" content={trackMeta?.twitterDescription || trackMeta?.description || 'Listen to music on Chest Music'} />
+        <meta name="twitter:image" content={trackMeta?.twitterImage || trackMeta?.ogImage || 'https://cdn.chestmusic.com/cover-default.jpg'} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -140,7 +154,7 @@ const SharePage: React.FC<SharePageProps> = ({ tracks, error, token }) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundImage: `linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url(${currentTrack.cover})`,
+        backgroundImage: `linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url(${currentTrack?.cover || 'https://cdn.chestmusic.com/cover-default.jpg'})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed'
@@ -172,8 +186,8 @@ const SharePage: React.FC<SharePageProps> = ({ tracks, error, token }) => {
             maxWidth: '400px'
           }}>
             <img 
-              src={currentTrack.cover} 
-              alt={currentTrack.title}
+              src={currentTrack?.cover || 'https://cdn.chestmusic.com/cover-default.jpg'} 
+              alt={currentTrack?.name || 'Track'}
               style={{
                 width: '280px',
                 height: '280px',
@@ -190,7 +204,7 @@ const SharePage: React.FC<SharePageProps> = ({ tracks, error, token }) => {
               letterSpacing: '-0.02em',
               lineHeight: 1.2
             }}>
-              {currentTrack.title}
+              {currentTrack?.name || 'Unknown Track'}
             </h1>
             <p style={{ 
               margin: '0', 
@@ -199,20 +213,36 @@ const SharePage: React.FC<SharePageProps> = ({ tracks, error, token }) => {
               opacity: 0.8,
               letterSpacing: '-0.01em'
             }}>
-              {currentTrack.artist}
+              {currentTrack?.authors?.join(', ') || 'Unknown Artist'}
             </p>
           </div>
         </div>
 
         {/* Player Bar - Fixed at bottom */}
-        <PlayerBar tracks={tracks} variant="minimal" />
+        <PlayerBar tracks={tracks ? chestTracksToTracks(tracks) : []} variant="minimal" />
+        
+        {/* Play Limits UI */}
+        {isSharedLink && currentTrack && (
+          <>
+            <PlayLimitBanner 
+              playCount={playLimits.playCount}
+              playLimit={playLimits.playLimit || 0}
+              isSharedLink={isSharedLink}
+            />
+            <PlayLimitModal 
+              isOpen={showLimitModal}
+              onClose={() => setShowLimitModal(false)}
+              trackName={currentTrack.name}
+            />
+          </>
+        )}
       </div>
     </>
   );
 };
 
-// Simulate API fetch function for server-side rendering
-async function fetchTrackFromAPI(token: string): Promise<{ tracks?: Track[]; error?: string }> {
+// Fetch track data from Chest Music API
+async function fetchTrackFromAPI(token: string): Promise<{ tracks?: ChestTrack[]; error?: string; meta?: TrackMeta }> {
   try {
     // TODO: Replace with actual API call to /api/tracks/${token}
     // For now, simulate different responses based on token
@@ -220,38 +250,38 @@ async function fetchTrackFromAPI(token: string): Promise<{ tracks?: Track[]; err
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 100));
     
-    if (token === 'demo') {
-      // Mock successful response
+    // Real API call to get shared track
+    try {
+      const track = await apiClient.getSharedTrack(token);
+      const meta = apiClient.generateTrackMeta(track);
+      
       return {
-        tracks: [
-          {
-            title: 'Ocean Waves',
-            artist: 'Nature Sounds',
-            cover: 'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=400&h=400&fit=crop',
-            url: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav'
-          }
-        ]
+        tracks: [track],
+        meta
+      };
+    } catch (apiError) {
+      // Fallback to mock data for development
+      if (token === 'demo') {
+        const mockTrack: ChestTrack = {
+          id: 'demo-track',
+          name: 'Ocean Waves',
+          authors: ['Nature Sounds'],
+          cover: 'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=400&h=400&fit=crop',
+          audio: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav',
+          plays: 5,
+          play_limit: 10,
+          token
+        };
+        return {
+          tracks: [mockTrack],
+          meta: apiClient.generateTrackMeta(mockTrack)
+        };
+      }
+      
+      return {
+        error: 'Track not found or has expired'
       };
     }
-    
-    if (token === 'test') {
-      // Mock another successful response
-      return {
-        tracks: [
-          {
-            title: 'Midnight Jazz',
-            artist: 'Cool Vibes',
-            cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop',
-            url: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav'
-          }
-        ]
-      };
-    }
-    
-    // Simulate invalid token
-    return {
-      error: 'Track not found or has expired'
-    };
     
     /* 
     // Real implementation would look like this:

@@ -1,3 +1,4 @@
+// Legacy types (keep for compatibility)
 export interface Track {
   title: string;
   artist: string;
@@ -16,3 +17,16 @@ export interface PlayerState {
   isShuffled: boolean;
   showVolumeSlider: boolean;
 }
+
+// New Chest Player integration types
+export type {
+  ChestTrack,
+  TrackSource,
+  SharedTrackData,
+  PlayLimitState,
+  GetTrackSourceRequest,
+  GetTrackSourceResponse,
+  UpdateTrackPlayRequest,
+  UpdateTrackPlayResponse,
+  TrackMeta
+} from './chest-player';
